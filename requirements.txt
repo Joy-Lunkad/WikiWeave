@@ -1,0 +1,9 @@
+EbookLib
+html2text
+python-dotenv
+request
+llama-index
+rich
+openai
+etils[etree]
+tqdm
