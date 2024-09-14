@@ -7,3 +7,5 @@ rich
 openai
 etils[etree]
 tqdm
+google-generativeai
+pydantic
