@@ -87,7 +87,7 @@ class Wiki:
     sections: dict[str, Section]
     input_dir: str = "./input_docs"
     use_n_prev_chunks: int = 5
-    which_model: str = "models/gemini-1.5-pro"
+    which_model: str = "models/gemini-1.5-flash"
 
     def __post_init__(self):
 
