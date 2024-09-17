@@ -30,7 +30,7 @@ class DocStore:
             chunk_size=self.chunk_size,
             chunk_overlap=self.chunk_overlap,
         )
-        self.nodes: list[TextNode] = parser.get_nodes_from_documents(documents)
+        self.nodes: list[TextNode] = parser.get_nodes_from_documents(documents)  # type:ignore
 
 
 def load_test(chunk_size=1024, chunk_overlap=0):
