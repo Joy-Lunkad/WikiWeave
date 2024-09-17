@@ -94,7 +94,7 @@ class Wiki:
         print("......  Loading Data  .....")
         self.docstore = DocStore(
             "./input_docs",
-            chunk_size=1024,
+            chunk_size=2048,
             chunk_overlap=0,
         )
         self.running_summary = []
@@ -145,7 +145,7 @@ class Wiki:
 
     def read_chunks(self):
 
-        for curr_node in self.docstore.nodes[6:10]:
+        for curr_node in self.docstore.nodes[3:8]:
             curr_chunk_text = curr_node.text
 
             prev_chunks_text = prompt_templates.apply_prev_chunks_template(
@@ -161,7 +161,7 @@ class Wiki:
 
             response = None
             tries = 0
-            max_retries = 3
+            max_retries = 10
             while response is None and tries <= max_retries:
                 try:
                     response = self.add_model.generate_content(user_msg)
@@ -169,15 +169,14 @@ class Wiki:
                     tries += 1
                     rich.print(f"Retrying: {tries}/{max_retries}")
 
-                    
-            if response is None:
-                raise e  # type: ignore
-        
-            print("-" * 100)
-            rich.print(response)
-        
-            self.process_response(response)
-            self.update_sections()
+            if tries > max_retries:
+                raise Exception("Error calling Gemini API")        
+            
+            if response is not None:
+                print("-" * 100)
+                rich.print(response)
+                self.process_response(response)
+                self.update_sections()
 
     def process_response(self, response: GenerateContentResponse):
 
