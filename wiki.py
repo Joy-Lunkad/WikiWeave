@@ -60,7 +60,7 @@ class EntityAttributes(ABC):
 
     @abstractmethod
     def get_attributes(self) -> dict[str, Attribute]:
-        """Return a list of all attributes."""
+        """Return a dict of all attributes."""
         pass
 
 
