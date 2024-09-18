@@ -4,3 +4,4 @@
 *.pyc
 *.json
 test.ipynb
+/wiki_data
