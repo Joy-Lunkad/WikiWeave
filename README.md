@@ -167,3 +167,4 @@ Attribute (Abstract Class)
 - [ ]  **Add more section examples:** *Offering examples and best practices for structuring these sections to help users design their wikis effectively.*
 - [ ]  **RAG-Based Index for Wiki Content**: *Incorporating Retrieval-Augmented Generation (RAG) will enhance the relevance of generated content by referencing existing wiki data during generation.*
 - [ ]  **Allow Multi-Turn LLM Function Calls with RAG Retrieval for Section Functions**: *Enabling multi-turn function calls with RAG retrieval will improve the LLM's ability to generate more accurate and context-aware content.*
+- [ ]  **Add OpenAI models**
