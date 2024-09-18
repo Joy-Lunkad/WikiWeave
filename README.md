@@ -46,7 +46,7 @@ WikiWeave uses LLM agents to carefully read through a series while simultaneousl
     ```
     
 
-> For instance, if you're creating a wiki for the 'Harry Potter' series, your `input_docs` would include all seven books named accordingly. Your schema might include sections like 'Spells', 'Potions', 'Magical Creatures', etc.
+> For instance, if you're creating a wiki for the 'Harry Potter' series, your `input_docs` would include all seven books named accordingly. Your schema might include sections for 'Spells', 'Potions', 'Magical Creatures', etc.
 > 
 
 And that's it! Sit back and enjoy as WikiWeave creates your wiki in real-time. 
@@ -157,7 +157,6 @@ Attribute (Abstract Class)
 │   ├── data
 │   └── buffer
 ├── Functions:
-│   ├── __post_init__
 │   ├── add_to_buffer
 │   ├── update_data
 │   ├── to_markdown (abstract)
