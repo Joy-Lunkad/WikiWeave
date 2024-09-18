@@ -12,3 +12,7 @@
  
  WikiWeave is built to ingest data sequentially, like reading a novel naturally.
  `BookNumber` must be zero-padded.
+
+# TODOs
+ - [ ] Add Alias based merging functionality to SectionEntity.
+ - [ ] Add more section_examples. 
