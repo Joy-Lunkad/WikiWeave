@@ -339,11 +339,11 @@ class Characters(wiki.Section):
         name: str,
         content: str,
     ):
-        """Call this function to add all content related to the character's physical appearance. This content will be used to build a detailed description of the character's looks.
-        This function adds the `content` to the named character's `appearance` in
-        the wiki. Call this function whenever any content about the character's
-        appearance is mentioned.
-        Deduplication is handled by the function.
+        """If the appearance of any character is mentioned in the current chunk, 
+        call this function to add the content related to the character's
+        appearance to the wiki. This content will be used to build a detailed description of the character's looks. 
+        Call this function whenever any content about the character's
+        appearance is mentioned. Deduplication is handled by the function.
 
         Args:
             name (str): Name of the character.
@@ -362,6 +362,6 @@ class Characters(wiki.Section):
             "add_character": self.add_character,
             "add_to_character_personality": self.add_to_character_personality,
             "add_to_character_aliases": self.add_to_character_aliases,
-            "add_to_character_trivia": self.add_to_character_trivia,
             "add_to_character_appearance": self.add_to_character_appearance,
+            "add_to_character_trivia": self.add_to_character_trivia,
         }
