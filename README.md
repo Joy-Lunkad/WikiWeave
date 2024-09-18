@@ -4,8 +4,6 @@
 
 WikiWeave is the first open-source tool for automatically extracting and organizing narrative data from book series into a comprehensive, wiki-style knowledge base using LLM agents. It allows fans and authors to create a wiki-style encyclopedia from the source material alone. 
 
-[**GitHub Repository**](https://github.com/Joy-Lunkad/WikiWeave)
-
 ## What's a Wiki?
 
 ![image.png](assets/mistborn_wiki_ss.png)
