@@ -10,6 +10,7 @@ from typing import Any, Callable, Type
 import google.generativeai as genai
 import prompt_templates
 import wiki
+from section_examples import characters
 
 
 class Description(wiki.Attribute):
@@ -61,63 +62,52 @@ class Description(wiki.Attribute):
         self.data = content.strip()
 
 
-class Geography(wiki.Attribute):
+class CharactersInvolved(wiki.Attribute):
 
     @classmethod
     def description(cls):
-        return "Markdown Formatted: Geographical features of the setting."
+        return "A list of all known characters who have appeared at the Setting."
 
     @classmethod
     def name(cls):
-        return "geography"
+        return "characters_involved"
 
-    def add_to_buffer(self, content: str):
-        super().add_to_buffer(content=content)
+    def add_to_buffer(self, character_name: str):
+        super().add_to_buffer(content=character_name)
 
-    def update_data(
-        self,
-        model: genai.GenerativeModel,
-        section_name: str,
-        section_entity_name: str,
-        **kwargs,
-    ):
-        update_prompt = (
-            "Provide detailed information on the geographical features of the setting, "
-            "including terrain, climate, natural resources, and significant landmarks."
-        )
-
-        prompt = prompt_templates.UPDATE_FUNCTION_PROMPT_TEMPLATE.format(
-            section_name=section_name,
-            section_entity_name=section_entity_name,
-            attribute_name=self.name,
-            attribute_description=self.description,
-            update_prompt=update_prompt,
-            existing_data=self.data,
-            new_data="\n".join(self.buffer),
-        )
-
-        return super().update_data(
-            prompt=prompt,
-            model=model,
-            **kwargs,
-        )
+    def update_data(self, characters_section: characters.Characters, **kwargs) -> None:
+        aliases = []
+        for character_name in self.buffer:
+            character = characters_section.entities.get(character_name)
+            if character is not None:
+                aliases_attr: characters.Aliases = character.attributes["aliases"]  # type: ignore
+                aliases = aliases_attr.data
+                
+            if character_name not in self.data and all(
+                a not in self.data for a in aliases
+            ):
+                self.data.append(character_name)
+        super().update_data()
 
     def to_markdown(self) -> str:
-        return self.data
+        return "\n".join(f"- {item}" for item in self.data)
 
     def from_markdown(self, content: str):
-        self.data = content.strip()
+        lines = content.strip().splitlines()
+        self.data = [
+            line.lstrip("- ").strip() for line in lines if line.startswith("- ")
+        ]
 
 
-class History(wiki.Attribute):
+class Trivia(wiki.Attribute):
 
     @classmethod
     def description(cls):
-        return "Markdown Formatted: Historical background of the setting."
+        return "Markdown Formatted: Various interesting trivia related to the setting."
 
     @classmethod
     def name(cls):
-        return "history"
+        return "trivia"
 
     def add_to_buffer(self, content: str):
         super().add_to_buffer(content=content)
@@ -130,56 +120,8 @@ class History(wiki.Attribute):
         **kwargs,
     ):
         update_prompt = (
-            "Provide a detailed historical background of the setting, "
-            "including major events, changes over time, and influential figures."
-        )
-
-        prompt = prompt_templates.UPDATE_FUNCTION_PROMPT_TEMPLATE.format(
-            section_name=section_name,
-            section_entity_name=section_entity_name,
-            attribute_name=self.name,
-            attribute_description=self.description,
-            update_prompt=update_prompt,
-            existing_data=self.data,
-            new_data="\n".join(self.buffer),
-        )
-
-        return super().update_data(
-            prompt=prompt,
-            model=model,
-            **kwargs,
-        )
-
-    def to_markdown(self) -> str:
-        return self.data
-
-    def from_markdown(self, content: str):
-        self.data = content.strip()
-
-
-class Culture(wiki.Attribute):
-
-    @classmethod
-    def description(cls):
-        return "Markdown Formatted: Cultural aspects of the setting."
-
-    @classmethod
-    def name(cls):
-        return "culture"
-
-    def add_to_buffer(self, content: str):
-        super().add_to_buffer(content=content)
-
-    def update_data(
-        self,
-        model: genai.GenerativeModel,
-        section_name: str,
-        section_entity_name: str,
-        **kwargs,
-    ):
-        update_prompt = (
-            "Provide detailed information on the cultural aspects of the setting, "
-            "including traditions, customs, social norms, and other relevant details."
+            "This should be a list of the setting's various trivia."
+            " Try to make this list as interesting as possible."
         )
 
         prompt = prompt_templates.UPDATE_FUNCTION_PROMPT_TEMPLATE.format(
@@ -216,36 +158,27 @@ class SettingAttributes(wiki.EntityAttributes):
         update_every_n_insertions=3,
     )
 
-    history = History(
-        name=History.name(),
-        type=str,
-        description=History.description(),
+    characters_involved = CharactersInvolved(
+        name=CharactersInvolved.name(),
+        type=list[str],
+        description=CharactersInvolved.description(),
         update_every_n_insertions=1,
-        default="",
+        default=[],
     )
 
-    geography = Geography(
-        name=Geography.name(),
+    trivia = Trivia(
+        name=Trivia.name(),
         type=str,
-        description=Geography.description(),
-        update_every_n_insertions=1,
-        default="",
-    )
-
-    culture = Culture(
-        name=Culture.name(),
-        type=str,
-        description=Culture.description(),
-        update_every_n_insertions=1,
+        description=Trivia.description(),
+        update_every_n_insertions=3,
         default="",
     )
 
     def get_attributes(self) -> dict[str, wiki.Attribute]:
         return dict(
             description=self.description,
-            history=self.history,
-            geography=self.geography,
-            culture=self.culture,
+            characters_involved=self.characters_involved,
+            trivia=self.trivia,
         )
 
 
@@ -261,12 +194,12 @@ class Settings(wiki.Section):
 
     def add_setting(self, name: str):
         """Call this function with every setting mentioned in the current chunk.
-        Settings can be places, locations, or significant landmarks within the narrative.
+        Settings are places or locations within the narrative. 
         Call this function every time a setting's name is mentioned.
         Deduplication is handled by the function. Remember, objects present
         aren't their own setting but should be a part of a setting's `description`.
-        For example: A setting 'Study' can have pen, table, etc in its `description`. 
-        
+        For example: A setting 'Study' can have pen, table, etc in its `description`.
+
         Args:
             name (str): The name of the setting.
         """
@@ -277,7 +210,9 @@ class Settings(wiki.Section):
     def add_to_setting_description(self, name: str, content: str):
         """Call this function to add relevant content that can help understand the
         setting's description. This content will be used to build a comprehensive
-        and detailed description of the setting.
+        and detailed description of the setting. Information extracted from 
+        the current chunk should be rephrased concisely before being
+        passed to this function.
 
         This function adds the `content` to the named setting's `description` in
         the wiki. Call this function if any relevant content is mentioned.
@@ -292,70 +227,57 @@ class Settings(wiki.Section):
             raise ValueError(f"Setting {name} does not exist.")
         description: Description = setting.attributes["description"]  # type: ignore
         description.add_to_buffer(content=content)
+        rich.print(f"To {name}'s description added -> {content}")
 
-    def add_to_setting_geography(self, name: str, content: str):
-        """Call this function to add information about the geographical features
-        of the setting. This content will be used to describe the terrain, climate,
-        natural resources, and significant landmarks of the setting.
-
-        This function adds the `content` to the named setting's `geography` in
-        the wiki. Call this function if any relevant content is mentioned.
-        Deduplication is handled by the function.
+    def add_to_characters_involved_with_setting(self, name: str, character_name: str):
+        """
+        Call this function with every character at the named setting in current chunk.
+        Some characters might not have named but might be called with their aliases
+        like thier social standing or thier titles. Call this function with those
+        aliases instead. Call this function every time a character is mentioned
+        to be present at a setting. Deduplication is handled by the function.
 
         Args:
             name (str): Name of the setting.
+            character_name (str): The character's name or alias who is present
+                at the setting or is mentioned to have been to the setting
+                at any time in the past.
+        """
+        setting = self.entities.get(name)
+        if not setting:
+            raise ValueError(f"Setting {name} does not exist.")
+        char_involved: CharactersInvolved = setting.attributes["characters_involved"]  # type: ignore
+        char_involved.add_to_buffer(character_name=character_name)
+        rich.print(f"To {name}'s characters involved added -> {character_name}")
+
+    def add_to_setting_trivia(
+        self,
+        name: str,
+        content: str,
+    ):
+        """Call this function to add any interesting trivia about the setting
+        to the wiki. Information extracted from the current chunk should be
+        rephrased concisely before being passed to this function.
+        Call this function every time any relavent content is mentioned.
+        Deduplication is handled by the function.
+
+        Args:
+            name (str): Name of the setting
             content (str): The content to be added.
         """
         setting = self.entities.get(name)
         if not setting:
             raise ValueError(f"Setting {name} does not exist.")
-        geography: Geography = setting.attributes["geography"]  # type: ignore
-        geography.add_to_buffer(content=content)
 
-    def add_to_setting_history(self, name: str, content: str):
-        """Call this function to add historical background information about the setting.
-        This content will be used to build a detailed history of the setting, including
-        major events, changes over time, and influential figures.
-
-        This function adds the `content` to the named setting's `history` in
-        the wiki. Call this function if any relevant content is mentioned.
-        Deduplication is handled by the function.
-
-        Args:
-            name (str): Name of the setting.
-            content (str): The content to be added.
-        """
-        setting = self.entities.get(name)
-        if not setting:
-            raise ValueError(f"Setting {name} does not exist.")
-        history: History = setting.attributes["history"]  # type: ignore
-        history.add_to_buffer(content=content)
-
-    def add_to_setting_culture(self, name: str, content: str):
-        """Call this function to add information about the cultural aspects of the setting.
-        This content will be used to describe the traditions, customs, social norms,
-        and other relevant cultural details.
-
-        This function adds the `content` to the named setting's `culture` in
-        the wiki. Call this function if any relevant content is mentioned.
-        Deduplication is handled by the function.
-
-        Args:
-            name (str): Name of the setting.
-            content (str): The content to be added.
-        """
-        setting = self.entities.get(name)
-        if not setting:
-            raise ValueError(f"Setting {name} does not exist.")
-        culture: Culture = setting.attributes["culture"]  # type: ignore
-        culture.add_to_buffer(content=content)
+        trivia: Trivia = setting.attributes["trivia"]  # type: ignore
+        trivia.add_to_buffer(content=content)
+        rich.print(f"To {name}'s trivia added -> {content}")
 
     @property
     def section_functions(self) -> dict[str, Callable]:
         return {
             "add_setting": self.add_setting,
             "add_to_setting_description": self.add_to_setting_description,
-            "add_to_setting_geography": self.add_to_setting_geography,
-            "add_to_setting_history": self.add_to_setting_history,
-            "add_to_setting_culture": self.add_to_setting_culture,
+            "add_to_characters_involved_with_setting": self.add_to_characters_involved_with_setting,
+            "add_to_setting_trivia": self.add_to_setting_trivia,
         }

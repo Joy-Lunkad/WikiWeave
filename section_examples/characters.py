@@ -78,7 +78,6 @@ class Aliases(wiki.Attribute):
         super().add_to_buffer(content=alias)
 
     def update_data(self, **kwargs) -> None:
-
         for alias in self.buffer:
             if alias not in self.data:
                 self.data.append(alias)  # type: ignore
@@ -164,7 +163,6 @@ class Appearance(wiki.Attribute):
         section_entity_name: str,
         **kwargs,
     ):
-
         update_prompt = (
             "Provide a detailed physical description of the character's appearance."
             "Use the new data provided to enrich the existing description."
@@ -268,12 +266,11 @@ class Characters(wiki.Section):
         name: str,
         content: str,
     ):
-        """Call this function to add relevant content that can help understand the
-        character's personality. This content will be used to deeply analyze the
-        character's personality from a psychological and sociological prespective.
+        """Call this function to add relevant and interesting content that
+        can help understand the character's personality. This content will be
+        used to deeply analyze the character's personality from a psychological
+        and sociological prespective. Deduplication is handled by the function.
 
-        This function adds the `content` to the named character's `personality` in
-        the wiki. Call this function if any relavent content is mentioned. Deduplication is handled by the function.
 
         Args:
             name (str): Name of the character
@@ -285,15 +282,16 @@ class Characters(wiki.Section):
 
         personality: Personality = character.attributes["personality"]  # type: ignore
         personality.add_to_buffer(content=content)
+        rich.print(f"To {name}'s personality added -> {content}")
 
     def add_to_character_trivia(
         self,
         name: str,
         content: str,
     ):
-        """Call this function to add any interesting trivia about the character to the wiki. Information extracted from the current chunk should be
+        """Call this function to add any interesting trivia about the character 
+        to the wiki. Information extracted from the current chunk should be
         rephrased concisely before being passed to this function.
-        Call this function every time any relavent content is mentioned.
         Deduplication is handled by the function.
 
         Args:
@@ -306,6 +304,7 @@ class Characters(wiki.Section):
 
         trivia: Trivia = character.attributes["trivia"]  # type: ignore
         trivia.add_to_buffer(content=content)
+        rich.print(f"To {name}'s trivia added -> {content}")
 
     def add_to_character_aliases(
         self,
@@ -316,8 +315,7 @@ class Characters(wiki.Section):
         this function to add the alias to the character's information in the wiki.
         The character's full name is also an alias. Some character's also have a
         `honorific name` consisting of 3-4 lines. This should also be added to
-        their aliases. Call this function every time a character's name or alias
-        is mentioned. Deduplication is handled by the function.
+        their aliases. Deduplication is handled by the function.
 
         Args:
             name (str): Name of the character
@@ -333,15 +331,16 @@ class Characters(wiki.Section):
         if alias not in self.entities:
             self.entities[alias] = character
             # TODO: Merge Aliases function.
+        rich.print(f"To {name}'s aliases added -> {alias}")
 
     def add_to_character_appearance(
         self,
         name: str,
         content: str,
     ):
-        """If the appearance of any character is mentioned in the current chunk, 
+        """If the appearance of any character is mentioned in the current chunk,
         call this function to add the content related to the character's
-        appearance to the wiki. This content will be used to build a detailed description of the character's looks. 
+        appearance to the wiki. This content will be used to build a detailed description of the character's looks.
         Call this function whenever any content about the character's
         appearance is mentioned. Deduplication is handled by the function.
 
@@ -355,6 +354,7 @@ class Characters(wiki.Section):
 
         appearance: Appearance = character.attributes["appearance"]  # type: ignore
         appearance.add_to_buffer(content=content)
+        rich.print(f"To {name}'s appearance added -> {content}")
 
     @property
     def section_functions(self) -> dict[str, Callable]:

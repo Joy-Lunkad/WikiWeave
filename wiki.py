@@ -1,3 +1,6 @@
+import warnings
+warnings.simplefilter(action='ignore', category=FutureWarning)
+
 import json
 import rich
 import os
@@ -36,14 +39,14 @@ class Attribute(ABC, Generic[T]):
         **kwargs,
     ) -> Any:
         """Method for updating `attribute.data` from data in `attribute.buffer`"""
-
         if model is not None and prompt is not None:
             response = model.generate_content(prompt)
-            rich.print(response)
-            self.data = response.text
-
+            try:
+                self.data = response.text
+            except:
+                print("Gemini Error in updating attribute data.")
         self.buffer = []
-        rich.print(f"New data -> {self.data}")
+        rich.print(f"{self.data}")
 
     @abstractmethod
     def to_markdown(self) -> str:
@@ -91,7 +94,7 @@ class Wiki:
 
     def __post_init__(self):
 
-        print("......  Loading Data  .....")
+        print("...  Loading Data  ...")
         self.docstore = DocStore(
             "./input_docs",
             chunk_size=2048,
@@ -99,13 +102,14 @@ class Wiki:
         )
         self.running_summary = []
 
-        print("....  Initializing LLM  ....")
+        print("...Initializing LLM...")
         self.functions = {}
         for section in self.sections.values():
             self.functions.update(section.section_functions)
         self.functions["generate_chunk_summary"] = self.generate_chunk_summary
 
-        rich.print(self.functions)
+        rich.print(f"---All Available Functions---")
+        rich.print(list(self.functions.keys()))
 
         self.add_model = genai.GenerativeModel(
             self.which_model,
@@ -134,18 +138,22 @@ class Wiki:
         few previous chunks to help it understand the current chunk better,
         thus aiding it to build the wiki.
         Try to keep this summary about 500 words long.
-        Additionally, the summary should try to keep track of the characters present, 
-        current setting, and other important details for future reference. 
+        Additionally, the summary should try to keep track of the characters present,
+        current setting, and other important details for future reference.
 
         Args:
             summary (str): Markdown Formated summary of the current chunk.
         """
+        print("-" * 100)
+        rich.print(f'Summary: {summary}\n')
         self.running_summary.append(summary)
         self.running_summary = self.running_summary[-self.use_n_prev_chunks :]
 
     def read_chunks(self):
 
-        for curr_node in self.docstore.nodes[3:8]:
+        for curr_node in self.docstore.nodes[3:10]:
+            print('-' * 100)    
+            rich.print(f"...Processing Next Chunk...\n")
             curr_chunk_text = curr_node.text
 
             prev_chunks_text = prompt_templates.apply_prev_chunks_template(
@@ -155,9 +163,6 @@ class Wiki:
                 prev_chunks=prev_chunks_text,
                 curr_chunk=curr_chunk_text,
             )
-
-            print("-" * 100)
-            rich.print(user_msg)
 
             response = None
             tries = 0
@@ -170,20 +175,17 @@ class Wiki:
                     rich.print(f"Retrying: {tries}/{max_retries}")
 
             if tries > max_retries:
-                raise Exception("Error calling Gemini API")        
-            
+                raise Exception("Error calling Gemini API")
+
             if response is not None:
-                print("-" * 100)
-                rich.print(response)
                 self.process_response(response)
                 self.update_sections()
 
     def process_response(self, response: GenerateContentResponse):
-
+        print('-' * 100)
+        rich.print(f"...Adding Content to Atribute Buffers...\n")
         for part in response.parts:
             if fn := part.function_call:
-                args = ", ".join(f"{key}={val}" for key, val in fn.args.items())
-                rich.print(f"Calling {fn.name}({args})")
                 try:
                     self.call_function(part.function_call)
                 except Exception as e:
@@ -191,24 +193,19 @@ class Wiki:
 
     def update_sections(self, force=False):
         for section_name, section in self.sections.items():
+            print('-' * 100)
+            rich.print(f"...Updating {section_name}...\n")
             for entity_name, entity in section.entities.items():
                 for attr_name, attr in entity.attributes.items():
                     update_due = attr.update_every_n_insertions <= len(attr.buffer)
-
-                    if update_due or force:
-                        rich.print(
-                            f"... Updating {section_name}: {entity_name} -> {attr_name} ..."
-                        )
-                        rich.print(f"Old data: {attr.data}")
+                    if update_due or (force and len(attr.buffer)):
+                        print('-' * 80)
+                        rich.print(f"New {entity_name}: {attr_name} ->")
                         attr.update_data(
                             section_name=section_name,
                             section_entity_name=entity_name,
                             model=self.update_model,
-                        )
-
-                    else:
-                        rich.print(
-                            f"{section_name}: {entity_name} -> {attr_name} = buffer_size = {len(attr.buffer)}"
+                            characters_section=self.sections.get("Characters"),
                         )
 
     def save_wiki(self, root_dir: str = "./wiki_data"):
@@ -231,7 +228,6 @@ class Wiki:
             for entity_name, entity in section.entities.items():
                 entity_fname = sanitize_filename(entity_name)
                 entity_dir = os.path.join(entities_dir, entity_fname)
-                os.makedirs(entity_dir, exist_ok=True)
 
                 attributes = entity.attributes
                 for attr_name, attr in attributes.items():
@@ -239,9 +235,10 @@ class Wiki:
                     attr_file = os.path.join(entity_dir, f"{attr_fname}.md")
 
                     data_to_save = attr.to_markdown()
-
-                    with open(attr_file, "w", encoding="utf-8") as f:
-                        f.write(data_to_save)
+                    if data_to_save:
+                        os.makedirs(entity_dir, exist_ok=True)
+                        with open(attr_file, "w", encoding="utf-8") as f:
+                            f.write(data_to_save)
 
     def load_wiki(self, root_dir: str = "./wiki_data"):
         """Load wiki from .md files.
@@ -325,5 +322,5 @@ if __name__ == "__main__":
     )
 
     wiki.read_chunks()
-    wiki.update_sections(force=False)
+    wiki.update_sections(force=True)
     wiki.save_wiki()
