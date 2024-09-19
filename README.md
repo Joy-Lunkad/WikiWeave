@@ -4,7 +4,7 @@
 
 WikiWeave is the first open-source tool for automatically extracting and organizing narrative data from book series into a comprehensive, wiki-style knowledge base using LLM agents. It allows fans and authors to create a wiki-style encyclopedia from the source material alone. 
 
-[Video Demo](https://www.loom.com/share/84fb5f2d391945478702a0799acb64af?sid=76571282-c51f-4b54-92e7-af4d04038708)
+[Video Demo](https://youtu.be/974D9dRZAuo)
 
 ## What's a Wiki?
 
