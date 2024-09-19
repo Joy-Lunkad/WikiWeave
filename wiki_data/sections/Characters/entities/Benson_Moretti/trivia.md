@@ -1,0 +1,4 @@
+- Benson Moretti was embarrassed by his father’s silver vine-leaf pocket watch because it would often malfunction.
+- Benson Moretti supported his sister’s dream of becoming a steam mechanic just like how he supported Klein’s university education.
+- Benson Moretti’s company was affected by the situation in the Southern Continent. There was a drastic drop both in profit and business transactions. More than a third of the employees were retrenched.
+- In order to keep his job and maintain their livelihood, Benson could only accept more arduous tasks. He had to work overtime more frequently or head to places with harsh environments. 
