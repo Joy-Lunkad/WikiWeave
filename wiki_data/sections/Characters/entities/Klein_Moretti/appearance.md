@@ -1,5 +1,6 @@
-## Klein Moretti
+"""## Appearance
 
-### Description of appearance:
+Klein Moretti is a young man of average height with black hair and brown eyes. He is thinly built and possesses average-looking features. 
 
-Klein Moretti is a man of average height and build, with black hair and brown eyes. His features are described as "average" and he has a "rather deep outline," suggesting a slightly gaunt or thin face. He is often seen wearing a linen shirt, likely due to his occupation. 
+ *More information about his appearance as the story progresses will be added here later.* 
+"""
