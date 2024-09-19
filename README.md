@@ -4,8 +4,6 @@
 
 WikiWeave is the first open-source tool for automatically extracting and organizing narrative data from book series into a comprehensive, wiki-style knowledge base using LLM agents. It allows fans and authors to create a wiki-style encyclopedia from the source material alone. 
 
-[Video Demo](https://youtu.be/974D9dRZAuo)
-
 ## What's a Wiki?
 
 ![image.png](assets/mistborn_wiki_ss.png)
@@ -49,7 +47,8 @@ WikiWeave uses LLM agents to carefully read through a series while simultaneousl
 > For instance, if you're creating a wiki for the 'Harry Potter' series, your `input_docs` would include all seven books named accordingly. Your schema might include sections for 'Spells', 'Potions', 'Magical Creatures', etc.
 > 
 
-And that's it! Sit back and enjoy as WikiWeave creates your wiki in real-time. 
+And that's it! Sit back and enjoy as WikiWeave creates your wiki in real-time.  
+[Video Demo](https://youtu.be/974D9dRZAuo)
 
 # Technical Details
 
