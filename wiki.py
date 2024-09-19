@@ -1,5 +1,6 @@
 import warnings
-warnings.simplefilter(action='ignore', category=FutureWarning)
+
+warnings.simplefilter(action="ignore", category=FutureWarning)
 
 import json
 import rich
@@ -90,7 +91,7 @@ class Wiki:
     sections: dict[str, Section]
     input_dir: str = "./input_docs"
     use_n_prev_chunks: int = 5
-    which_model: str = "models/gemini-1.5-flash"
+    which_model: str = "models/gemini-1.5-pro"
 
     def __post_init__(self):
 
@@ -110,18 +111,18 @@ class Wiki:
 
         rich.print(f"---All Available Functions---")
         rich.print(list(self.functions.keys()))
-
+        generation_cfg = genai.GenerationConfig(temperature=0.5, top_p=0.5)
         self.add_model = genai.GenerativeModel(
             self.which_model,
             tools=self.functions.values(),  # type: ignore
             system_instruction=prompt_templates.DEFAULT_ADD_SYSTEM_MSG,
-            # TODO: set generation config
+            generation_config=generation_cfg,
         )
 
         self.update_model = genai.GenerativeModel(
             self.which_model,
             system_instruction=prompt_templates.DEFAULT_UPDATE_SYSTEM_MSG,
-            # TODO: set generation config
+            generation_config=generation_cfg,
         )
 
     def call_function(self, function_call):
@@ -145,14 +146,14 @@ class Wiki:
             summary (str): Markdown Formated summary of the current chunk.
         """
         print("-" * 100)
-        rich.print(f'Summary: {summary}\n')
+        rich.print(f"Summary: {summary}\n")
         self.running_summary.append(summary)
         self.running_summary = self.running_summary[-self.use_n_prev_chunks :]
 
     def read_chunks(self):
 
-        for curr_node in self.docstore.nodes[3:10]:
-            print('-' * 100)    
+        for curr_node in self.docstore.nodes[3:7]:
+            print("-" * 100)
             rich.print(f"...Processing Next Chunk...\n")
             curr_chunk_text = curr_node.text
 
@@ -171,6 +172,8 @@ class Wiki:
                 try:
                     response = self.add_model.generate_content(user_msg)
                 except Exception as e:
+                    if tries == 0:
+                        rich.print(f"Gemini API error: {e}")
                     tries += 1
                     rich.print(f"Retrying: {tries}/{max_retries}")
 
@@ -182,7 +185,7 @@ class Wiki:
                 self.update_sections()
 
     def process_response(self, response: GenerateContentResponse):
-        print('-' * 100)
+        print("-" * 100)
         rich.print(f"...Adding Content to Atribute Buffers...\n")
         for part in response.parts:
             if fn := part.function_call:
@@ -193,13 +196,13 @@ class Wiki:
 
     def update_sections(self, force=False):
         for section_name, section in self.sections.items():
-            print('-' * 100)
+            print("-" * 100)
             rich.print(f"...Updating {section_name}...\n")
             for entity_name, entity in section.entities.items():
                 for attr_name, attr in entity.attributes.items():
                     update_due = attr.update_every_n_insertions <= len(attr.buffer)
                     if update_due or (force and len(attr.buffer)):
-                        print('-' * 80)
+                        print("-" * 80)
                         rich.print(f"New {entity_name}: {attr_name} ->")
                         attr.update_data(
                             section_name=section_name,
