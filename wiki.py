@@ -152,7 +152,7 @@ class Wiki:
 
     def read_chunks(self):
 
-        for curr_node in self.docstore.nodes[3:7]:
+        for curr_node in self.docstore.nodes:
             print("-" * 100)
             rich.print(f"...Processing Next Chunk...\n")
             curr_chunk_text = curr_node.text
